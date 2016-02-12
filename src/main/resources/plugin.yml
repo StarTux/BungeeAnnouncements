@@ -1,0 +1,5 @@
+name: Announcements
+version: 0.01
+author: StarTux
+main: com.winthier.announcements.AnnouncementsPlugin
+description: Tell servers about player logins and logouts via plugin message
