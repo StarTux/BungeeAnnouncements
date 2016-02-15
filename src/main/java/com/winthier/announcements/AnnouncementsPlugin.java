@@ -26,16 +26,23 @@ public class AnnouncementsPlugin extends Plugin implements Listener
         getProxy().getPluginManager().registerListener(this, this);
     }
 
+    boolean wasAnythingQueued(UUID uuid) {
+        boolean result = false;
+        result |= waitingOnLeave.remove(uuid);
+        result |= waitingOnJoin.remove(uuid);
+        return result;
+    }
+
     @EventHandler
     public void onPostLoginEvent(PostLoginEvent event)
     {
         final UUID uuid = event.getPlayer().getUniqueId();
-        if (waitingOnLeave.remove(uuid) || waitingOnJoin.remove(uuid)) return;
+        if (wasAnythingQueued(uuid)) return;
         waitingOnJoin.add(uuid);
         final String name = event.getPlayer().getName();
         getProxy().getScheduler().schedule(this, new Runnable() {
             @Override public void run() {
-                if (!waitingOnJoin.remove(uuid)) return;
+                if (!wasAnythingQueued(uuid)) return;
                 broadcast("Join", uuid, name);
             }
         }, 750, TimeUnit.MILLISECONDS);
@@ -45,12 +52,12 @@ public class AnnouncementsPlugin extends Plugin implements Listener
     public void onPlayerDisconnectEvent(PlayerDisconnectEvent event)
     {
         final UUID uuid = event.getPlayer().getUniqueId();
-        if (waitingOnLeave.remove(uuid) || waitingOnJoin.remove(uuid)) return;
+        if (wasAnythingQueued(uuid)) return;
         waitingOnLeave.add(uuid);
         final String name = event.getPlayer().getName();
         getProxy().getScheduler().schedule(this, new Runnable() {
             @Override public void run() {
-                if (!waitingOnLeave.remove(uuid)) return;
+                if (!wasAnythingQueued(uuid)) return;
                 broadcast("Leave", uuid, name);
             }
         }, 750, TimeUnit.MILLISECONDS);
